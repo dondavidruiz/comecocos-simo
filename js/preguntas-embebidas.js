@@ -1,0 +1,24 @@
+// Copia de seguridad de preguntas.csv (solo se usa si no se puede leer el CSV).
+// Se regenera con tools/actualizar-embebidas.ps1
+window.PREGUNTAS_CSV_EMBEBIDAS = `pregunta;correcta;falsa1;falsa2;disparatada;dato
+¿En qué ciudad tienen su sede la Junta y las Cortes de Castilla y León?;Valladolid;Burgos;León;En la Luna;Castilla y León no tiene capital oficial, pero Valladolid es la sede de sus instituciones.
+¿Cuántas provincias forman Castilla y León?;Nueve;Siete;Doce;Ochocientas;Son Ávila, Burgos, León, Palencia, Salamanca, Segovia, Soria, Valladolid y Zamora.
+¿Qué monumento romano es el símbolo de la ciudad de Segovia?;El Acueducto;El Teatro;El Faro;La Torre Eiffel;Se construyó sin argamasa: las piedras encajan por su propio peso.
+¿En qué ciudad está la catedral gótica donde reposan los restos del Cid?;Burgos;Ávila;Soria;Mordor;Rodrigo Díaz de Vivar y su esposa Jimena descansan bajo el crucero de la catedral.
+¿Qué ciudad es famosa por conservar completa su muralla medieval?;Ávila;Zamora;Palencia;Gotham City;Su muralla mide unos 2,5 km y tiene 88 torreones.
+¿Qué universidad española fundada en 1218 sigue funcionando hoy?;Universidad de Salamanca;Universidad de León;Universidad de Burgos;Universidad de Hogwarts;Es una de las universidades más antiguas del mundo en activo.
+¿Qué gran río atraviesa Soria, Valladolid y Zamora?;El Duero;El Tajo;El Ebro;El Amazonas;El Duero nace en los Picos de Urbión (Soria) y desemboca en Oporto.
+¿Cuál es un plato típico de Castilla y León?;Lechazo asado;Paella valenciana;Pulpo a feira;Helado de calcetín;El lechazo se asa en horno de leña, en cazuela de barro.
+¿Cuál es el pico más alto de Castilla y León?;Almanzor;Teide;Mulhacén;El Everest de la esquina;Mide 2.592 m y está en la Sierra de Gredos (Ávila).
+¿Qué ruta de peregrinación atraviesa Burgos, Palencia y León?;El Camino de Santiago;La Ruta de la Seda;La Vía Augusta;El Camino de Baldosas Amarillas;El Camino Francés cruza Castilla y León de este a oeste.
+¿Qué yacimiento burgalés es Patrimonio de la Humanidad por sus restos de homínidos?;Atapuerca;Altamira;Tito Bustillo;Jurassic Park;Allí se han hallado fósiles humanos de más de un millón de años.
+¿Qué ciudad tiene un alcázar con forma de proa de barco?;Segovia;Zamora;Ponferrada;Disneylandia;Se dice que inspiró el castillo de Blancanieves.
+¿Qué catedral es famosa en el mundo por sus vidrieras góticas?;La catedral de León;La catedral de Palencia;La catedral de Ávila;La catedral de Lego;Sus vidrieras suman cerca de 1.800 m² de color.
+¿Qué ciudad es conocida como «la Bella Desconocida»?;Palencia;Soria;Zamora;Narnia;Su catedral se llama «la Bella Desconocida» por ser poco conocida pese a su belleza.
+¿Qué poeta escribió «Campos de Castilla» inspirado en Soria?;Antonio Machado;Federico García Lorca;Gloria Fuertes;Mickey Mouse;Machado vivió en Soria, donde conoció a Leonor, su esposa.
+¿Qué río atraviesa la ciudad de Salamanca?;El Tormes;El Guadalquivir;El Júcar;El Río Chocolate;Sobre él se alza el Puente Romano de Salamanca.
+¿En qué provincia está el Lago de Sanabria, el mayor lago glaciar de la península?;Zamora;Soria;Segovia;En Júpiter;Es un lago de origen glaciar en el Parque Natural del Lago de Sanabria.
+¿Qué denominación de origen de vinos tintos recorre el valle del Duero?;Ribera del Duero;Rioja;Priorat;Denominación de Origen Marte;Es conocida por sus tintos de uva tempranillo.
+¿Qué antigua mina romana de oro de El Bierzo es Patrimonio de la Humanidad?;Las Médulas;Las Tablas de Daimiel;Los Monegros;Las Calcetinas;Los romanos moldearon el paisaje con agua para extraer el oro.
+¿Qué animal salvaje habita en la cordillera Cantábrica, en Palencia y León?;El oso pardo;El pingüino;El canguro;El unicornio;Es el mayor carnívoro terrestre de la península ibérica.
+`;

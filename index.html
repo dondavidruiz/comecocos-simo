@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d1f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Formación Educacyl - SIMO 26</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="img/icono-192.png">
+  <link rel="apple-touch-icon" href="img/icono-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <div id="zona">
+
+    <!-- ===================== PORTADA ===================== -->
+    <section id="pantalla-inicio" class="pantalla activa">
+      <div class="scroll">
+        <header class="portada">
+          <div class="fantasmitas" aria-hidden="true"><i class="fan f1"></i><i class="fan f2"></i><i class="fan f3"></i><i class="fan f4"></i></div>
+          <h1>Formación <span>Educacyl</span><br>SIMO 26</h1>
+          <p class="sub">¡Come puntos, esquiva fantasmas y demuestra lo que sabes!</p>
+        </header>
+
+        <article class="tarjeta" aria-labelledby="t-instr">
+          <h2 id="t-instr">📖 Cómo se juega</h2>
+          <ul class="instr">
+            <li><b>Muévete</b> deslizando el dedo por la pantalla, con la cruceta o con las flechas del teclado, y <b>come todos los puntos</b>.</li>
+            <li>Las <b>píldoras grandes</b> asustan a los fantasmas: ¡puedes comértelos!</li>
+            <li>Empiezas con <b>3 vidas</b> (la que juega más 2 extra).</li>
+            <li>Si un fantasma te atrapa, aparece una <b>pregunta</b> con 4 respuestas y <b>20 segundos</b>:
+              <span class="ok">✔ aciertas: sigues justo donde estabas, sin perder vida</span> ·
+              <span class="ko">✘ fallas o se acaba el tiempo: pierdes una vida y reinicias el nivel</span>. Tus puntos se mantienen siempre.</li>
+            <li>Cada nivel es más rápido y los fantasmas, más listos. ¡A partir del nivel 3 cambia el laberinto!</li>
+          </ul>
+          <details class="puntos">
+            <summary>Tabla de puntos</summary>
+            <p>Punto <b>10</b> · Píldora <b>50</b> · Fantasmas <b>200, 400, 800, 1600</b> · Fruta <b>100 a 5000</b> · Vida extra a los <b>10.000</b></p>
+          </details>
+          <div class="concurso">
+            <h3>🏆 Concurso</h3>
+            <p>El <b>correo electrónico es opcional</b>, pero <b>imprescindible para participar en el concurso</b>. Al terminar la feria, si tu puntuación está <b>entre las tres primeras</b>, nos pondremos en contacto contigo a través de ese correo para enviarte el premio.</p>
+          </div>
+        </article>
+
+        <form id="form-inicio" class="tarjeta" autocomplete="off" novalidate>
+          <h2>🎮 ¡A jugar!</h2>
+          <label for="nick">Nickname <small>(obligatorio)</small></label>
+          <input id="nick" name="nick" type="text" maxlength="14" minlength="2" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ej.: Pacmaster">
+          <p class="aviso">🔒 Mejor <b>no pongas tu nombre real</b>: lo verá todo el mundo en la clasificación.</p>
+
+          <label for="email">Correo electrónico <small>(opcional · necesario para el premio)</small></label>
+          <input id="email" name="email" type="email" inputmode="email" maxlength="120" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="tucorreo@ejemplo.es">
+
+          <label class="check" id="fila-consent">
+            <input id="consent" type="checkbox">
+            <span>He leído y acepto la <a href="#" id="abrir-legal">información sobre protección de datos</a> y consiento que usen mi correo para contactar conmigo si gano.</span>
+          </label>
+
+          <p id="error-form" class="error" role="alert" hidden></p>
+          <button id="btn-start" type="submit" class="boton grande">▶ START</button>
+          <p class="enlaces"><a href="ranking.html" target="_blank" rel="noopener">📊 Ver clasificación</a></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===================== JUEGO ===================== -->
+    <section id="pantalla-juego" class="pantalla">
+      <div id="hud">
+        <div class="hud-bloque"><span class="et">PUNTOS</span><b id="hud-puntos">0</b></div>
+        <div class="hud-bloque"><span class="et">NIVEL</span><b id="hud-nivel">1</b></div>
+        <div class="hud-bloque"><span class="et">VIDAS</span><div id="hud-vidas" aria-live="polite"></div></div>
+        <button type="button" id="btn-sonido" class="icono" aria-label="Silenciar o activar sonido">🔊</button>
+      </div>
+      <div id="lienzo-wrap"><canvas id="lienzo" aria-label="Tablero del juego"></canvas></div>
+      <div id="controles" aria-label="Controles">
+        <button type="button" class="dp arr" data-d="0" aria-label="Arriba">▲</button>
+        <button type="button" class="dp izq" data-d="1" aria-label="Izquierda">◀</button>
+        <span class="dp centro" aria-hidden="true"></span>
+        <button type="button" class="dp der" data-d="3" aria-label="Derecha">▶</button>
+        <button type="button" class="dp aba" data-d="2" aria-label="Abajo">▼</button>
+      </div>
+    </section>
+
+    <!-- ===================== RESULTADOS ===================== -->
+    <section id="pantalla-fin" class="pantalla">
+      <div class="scroll">
+        <div class="tarjeta fin">
+          <h2>¡Fin de la partida!</h2>
+          <p class="jugador">Jugador: <b id="fin-nick"></b></p>
+          <div class="puntos-final"><b id="fin-puntos">0</b><span>puntos</span></div>
+          <p class="nivel-final">Llegaste al nivel <b id="fin-nivel">1</b></p>
+          <p id="fin-posicion" class="posicion">Calculando tu posición…</p>
+          <h3>🥇 Las tres mejores puntuaciones</h3>
+          <ol id="fin-top3" class="top3"></ol>
+          <p id="fin-premio" class="premio"></p>
+          <button id="btn-repetir" type="button" class="boton grande">↻ Jugar otra vez</button>
+          <p class="enlaces"><a href="ranking.html" target="_blank" rel="noopener">📊 Ver clasificación completa</a></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== PREGUNTA ===================== -->
+    <div id="modal-pregunta" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="pregunta-texto">
+      <div class="tarjeta pregunta">
+        <p class="cab">👻 ¡Te ha pillado un fantasma!<br><small>Acierta y sigues donde estabas, sin perder vida</small></p>
+        <div id="temporizador"><div id="barra"></div><span id="seg">20</span></div>
+        <h2 id="pregunta-texto"></h2>
+        <div id="opciones"></div>
+        <p id="dato" class="dato" hidden></p>
+      </div>
+    </div>
+
+    <!-- ===================== PAUSA ===================== -->
+    <div id="modal-pausa" class="modal" hidden role="dialog" aria-modal="true">
+      <div class="tarjeta centrado"><h2>⏸ Pausa</h2><button id="btn-continuar" type="button" class="boton grande">Continuar</button></div>
+    </div>
+
+    <!-- ===================== LEGAL ===================== -->
+    <div id="modal-legal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="legal-t">
+      <div class="tarjeta legal">
+        <h2 id="legal-t">Información sobre protección de datos</h2>
+        <p class="provisional">⚠ Texto provisional, pendiente de validación por el delegado de protección de datos.</p>
+        <dl>
+          <dt>Responsable</dt><dd>Consejería de Educación de la Junta de Castilla y León (CRFPTIC).</dd>
+          <dt>Finalidad</dt><dd>Gestionar tu participación en el concurso del stand de Formación Educacyl en SIMO 26 y, si quedas entre los tres primeros con correo, contactar contigo para entregarte el premio. El nickname y la puntuación se mostrarán en la clasificación.</dd>
+          <dt>Legitimación</dt><dd>Tu consentimiento (el correo es voluntario; sin él puedes jugar, pero no optar al premio).</dd>
+          <dt>Conservación</dt><dd>Hasta la entrega del premio. Después se suprimirán los correos y el resto de datos.</dd>
+          <dt>Destinatarios</dt><dd>No se cederán a terceros. El almacenamiento lo realiza un proveedor de alojamiento que actúa como encargado del tratamiento, con servidores en la UE.</dd>
+          <dt>Derechos</dt><dd>Puedes solicitar el acceso, la rectificación o la supresión de tus datos, y retirar tu consentimiento, escribiendo a la dirección que figure en las bases del concurso.</dd>
+        </dl>
+        <button id="cerrar-legal" type="button" class="boton">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logo institucional: visible en TODAS las pantallas -->
+  <footer id="pie"><img src="img/logo.png" alt="Junta de Castilla y León · Consejería de Educación · Plan de Seguridad y Confianza Digital · Escuela 4.0 · CoDiCE TIC · Red de Digitalización"></footer>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/mazes.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/preguntas-embebidas.js"></script>
+<script src="js/questions.js"></script>
+<script src="js/api.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clasificación · Formación Educacyl - SIMO 26</title>
+  <link rel="icon" href="img/icono-192.png">
+  <style>
+    :root { --fondo:#0b0d1f; --panel:#151a3c; --borde:#2f3a86; --amarillo:#ffe600; --suave:#aab3e6; --naranja:#f15a22; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; display:flex; flex-direction:column; background:var(--fondo); color:#fff;
+      font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif; }
+    main { flex:1; width:min(900px,100%); margin:0 auto; padding:18px 14px; }
+    h1 { text-align:center; margin:4px 0 2px; color:var(--amarillo); font-size:clamp(26px,6vw,54px); text-transform:uppercase; text-shadow:0 3px 0 #b34a00; }
+    .sub { text-align:center; color:var(--suave); margin:0 0 16px; font-size:clamp(14px,2.6vw,22px); }
+    ol { list-style:none; margin:0; padding:0; }
+    li { display:flex; align-items:center; gap:14px; padding:clamp(8px,1.6vw,16px) 16px; margin-bottom:8px; border-radius:14px;
+      background:var(--panel); border:2px solid var(--borde); font-size:clamp(18px,3.6vw,34px); }
+    li:nth-child(1) { border-color:#ffd24a; background:#2a2410; } li:nth-child(2) { border-color:#cfd6e6; } li:nth-child(3) { border-color:#d98a4a; }
+    .pos { width:2.2em; text-align:center; font:bold 1em "Courier New",monospace; color:var(--suave); }
+    .nombre { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .pts { font:bold 1.05em "Courier New",monospace; color:var(--amarillo); }
+    .nota { text-align:center; color:var(--suave); font-size:14px; margin-top:12px; }
+    .vacio { text-align:center; color:var(--suave); padding:30px; }
+    footer { background:#fff; border-top:3px solid var(--naranja); padding:3px 8px; }
+    footer img { display:block; width:100%; max-height:54px; object-fit:contain; }
+    a { color:#9fb2ff; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>🏆 Clasificación</h1>
+  <p class="sub">Formación Educacyl · SIMO 26 &nbsp;·&nbsp; ✉️ = participa en el concurso</p>
+  <ol id="lista"><li class="vacio">Cargando…</li></ol>
+  <p class="nota" id="nota"></p>
+  <p class="nota"><a href="index.html">← Volver al juego</a></p>
+</main>
+<footer><img src="img/logo.png" alt="Junta de Castilla y León · Consejería de Educación · Plan de Seguridad y Confianza Digital"></footer>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+  const CFG = window.SIMO_CONFIG, medallas = ['🥇', '🥈', '🥉'];
+  async function pintar() {
+    const ol = document.getElementById('lista');
+    try {
+      const datos = await Almacen.ranking(10);
+      ol.innerHTML = '';
+      if (!datos.length) { ol.innerHTML = '<li class="vacio">Todavía no hay puntuaciones. ¡Sé el primero!</li>'; }
+      datos.forEach((p, i) => {
+        const li = document.createElement('li');
+        li.innerHTML = '<span class="pos"></span><span class="nombre"></span><span class="pts"></span>';
+        li.querySelector('.pos').textContent = medallas[i] || (i + 1);
+        li.querySelector('.nombre').textContent = p.nick + (p.correo ? ' ✉️' : '');
+        li.querySelector('.pts').textContent = p.puntos;
+        ol.appendChild(li);
+      });
+      document.getElementById('nota').textContent = Almacen.remoto ? '' : 'Modo local de pruebas: estas puntuaciones solo existen en este navegador.';
+    } catch (e) {
+      document.getElementById('nota').textContent = 'No se pudo actualizar la clasificación (sin conexión).';
+    }
+  }
+  pintar(); setInterval(pintar, CFG.RANKING_REFRESCO_S * 1000);
+</script>
+</body>
+</html>
