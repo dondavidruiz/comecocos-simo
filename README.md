@@ -63,11 +63,12 @@ Para probarlo en el móvil, conéctalo a la misma wifi y abre `http://IP-DE-TU-P
 Columnas separadas por `;` (así lo guarda Excel en español; también vale `,`):
 
 ```
-pregunta;correcta;falsa1;falsa2;disparatada;dato
+pregunta;correcta;falsa1;falsa2;disparatada;dato;dificultad
 ```
 
 - **disparatada**: la respuesta falsa absurda que hace gracia.
 - **dato** (opcional): curiosidad que sale tras responder.
+- **dificultad**: `facil`, `media` o `dificil`. Nivel 1: fáciles y medias · nivel 2: solo medias · nivel 3: medias y difíciles · nivel 4 en adelante: solo difíciles. Conviene tener bastantes difíciles (a partir del nivel 4 solo salen esas, sin repetir hasta agotarlas).
 - No uses `;` dentro de un campo (o enciérralo entre comillas).
 - En Excel: *Guardar como → CSV UTF-8 (delimitado por comas)*. Mantiene las tildes.
 - Salen en **orden aleatorio sin repetir** hasta agotarlas; luego se vuelven a barajar.
@@ -77,10 +78,12 @@ pregunta;correcta;falsa1;falsa2;disparatada;dato
 
 - 3 vidas (la que juega + 2 extra). Vida extra a los 10.000 puntos (como el original).
 - **Fantasma te atrapa → pregunta de 4 opciones, 20 s.**
-  - Acierto: continúas donde estabas, 3 s de invulnerabilidad y los fantasmas cercanos vuelven a su casa para no pillarte de nuevo al instante.
+  - Acierto: **reapareces en la salida** (con los puntos del tablero ya comidos, el marcador y las vidas intactos), con 3 s de invulnerabilidad.
   - Fallo o tiempo agotado: pierdes una vida y **reinicias el nivel**. Los puntos se mantienen siempre.
 - Puntuación del original: punto 10, píldora 50, fantasmas 200-400-800-1600, frutas 100-5000.
 - IA de fantasmas clásica (Blinky persigue, Pinky embosca, Inky usa a Blinky, Clyde duda), modos dispersión/persecución, Blinky se acelera al final, túneles laterales, fruta bonus a los 70 y 170 puntos comidos.
+- **Tiempo para responder**: 20 s en el nivel 1, 17 s en el 2, 14 s en el 3 y 2 s menos en cada nivel siguiente, con un mínimo de 4 s (`TIEMPO_PREGUNTA` y `TIEMPO_MINIMO_PREGUNTA` en `js/config.js`).
+- **Respuestas acertadas**: se muestran entre paréntesis junto a los puntos y **desempatan** la clasificación (a igualdad de puntos, más aciertos = mejor puesto).
 - **Dificultad creciente**: más velocidad y menos tiempo de susto por nivel, y un aumento progresivo (hasta +12 %) de la velocidad de los fantasmas según pasa el tiempo de partida.
 - Laberinto clásico en los niveles 1-2 y tres diseños nuevos (3-4, 5-6, 7-8), que se repiten después.
 - Controles: deslizar el dedo, cruceta en pantalla, flechas/WASD, pausa con `P`/`Esc`. En las preguntas se puede responder con 1-4 o A-D.

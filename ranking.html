@@ -20,6 +20,7 @@
     .pos { width:2.2em; text-align:center; font:bold 1em "Courier New",monospace; color:var(--suave); }
     .nombre { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .pts { font:bold 1.05em "Courier New",monospace; color:var(--amarillo); }
+    .pts small { color:var(--suave); font-weight:normal; font-size:.7em; }
     .nota { text-align:center; color:var(--suave); font-size:14px; margin-top:12px; }
     .vacio { text-align:center; color:var(--suave); padding:30px; }
     footer { background:#fff; border-top:3px solid var(--naranja); padding:3px 8px; }
@@ -30,7 +31,7 @@
 <body>
 <main>
   <h1>🏆 Clasificación</h1>
-  <p class="sub">Formación Educacyl · SIMO 26 &nbsp;·&nbsp; ✉️ = participa en el concurso</p>
+  <p class="sub">Formación Educacyl · SIMO 26 &nbsp;·&nbsp; ✉️ = participa en el concurso &nbsp;·&nbsp; (n) = respuestas acertadas, desempatan</p>
   <ol id="lista"><li class="vacio">Cargando…</li></ol>
   <p class="nota" id="nota"></p>
   <p class="nota"><a href="index.html">← Volver al juego</a></p>
@@ -51,7 +52,7 @@
         li.innerHTML = '<span class="pos"></span><span class="nombre"></span><span class="pts"></span>';
         li.querySelector('.pos').textContent = medallas[i] || (i + 1);
         li.querySelector('.nombre').textContent = p.nick + (p.correo ? ' ✉️' : '');
-        li.querySelector('.pts').textContent = p.puntos;
+        li.querySelector('.pts').innerHTML = p.puntos + ' <small>(' + (p.aciertos || 0) + ')</small>';
         ol.appendChild(li);
       });
       document.getElementById('nota').textContent = Almacen.remoto ? '' : 'Modo local de pruebas: estas puntuaciones solo existen en este navegador.';

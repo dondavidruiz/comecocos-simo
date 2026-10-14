@@ -33,9 +33,10 @@
             <li>Las <b>píldoras grandes</b> asustan a los fantasmas: ¡puedes comértelos!</li>
             <li>Empiezas con <b>3 vidas</b> (la que juega más 2 extra).</li>
             <li>Si un fantasma te atrapa, aparece una <b>pregunta</b> con 4 respuestas y <b>20 segundos</b>:
-              <span class="ok">✔ aciertas: sigues justo donde estabas, sin perder vida</span> ·
+              <span class="ok">✔ aciertas: vuelves a la salida sin perder vida (los puntos ya comidos se mantienen)</span> ·
               <span class="ko">✘ fallas o se acaba el tiempo: pierdes una vida y reinicias el nivel</span>. Tus puntos se mantienen siempre.</li>
-            <li>Cada nivel es más rápido y los fantasmas, más listos. ¡A partir del nivel 3 cambia el laberinto!</li>
+            <li>Cada nivel es más rápido, los fantasmas más listos, <b>las preguntas más difíciles y el tiempo para responder, más corto</b>. ¡A partir del nivel 3 cambia el laberinto!</li>
+            <li>La clasificación se ordena por puntos. <b>En caso de empate, queda por encima quien tenga más respuestas acertadas.</b></li>
           </ul>
           <details class="puntos">
             <summary>Tabla de puntos</summary>
@@ -93,9 +94,11 @@
           <h2>¡Fin de la partida!</h2>
           <p class="jugador">Jugador: <b id="fin-nick"></b></p>
           <div class="puntos-final"><b id="fin-puntos">0</b><span>puntos</span></div>
+          <p class="aciertos-final">Respuestas acertadas <b id="fin-aciertos">(0)</b></p>
           <p class="nivel-final">Llegaste al nivel <b id="fin-nivel">1</b></p>
           <p id="fin-posicion" class="posicion">Calculando tu posición…</p>
           <h3>🥇 Las tres mejores puntuaciones</h3>
+          <p class="leyenda">(entre paréntesis, las respuestas acertadas: en caso de empate a puntos queda por encima quien más tenga)</p>
           <ol id="fin-top3" class="top3"></ol>
           <p id="fin-premio" class="premio"></p>
           <button id="btn-repetir" type="button" class="boton grande">↻ Jugar otra vez</button>
@@ -107,7 +110,7 @@
     <!-- ===================== PREGUNTA ===================== -->
     <div id="modal-pregunta" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="pregunta-texto">
       <div class="tarjeta pregunta">
-        <p class="cab">👻 ¡Te ha pillado un fantasma!<br><small>Acierta y sigues donde estabas, sin perder vida</small></p>
+        <p class="cab">👻 ¡Te ha pillado un fantasma!<br><small>Acierta y vuelves a la salida, sin perder vida</small></p>
         <div id="temporizador"><div id="barra"></div><span id="seg">20</span></div>
         <h2 id="pregunta-texto"></h2>
         <div id="opciones"></div>
