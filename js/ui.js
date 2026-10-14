@@ -124,10 +124,17 @@
   });
 
   /* ------------------------------- preguntas ------------------------------ */
-  function preguntar(resolver) {
-    const q = Preguntas.siguiente();
+  /* Segundos para responder: nivel 1 = base; nivel 2 = -3; nivel 3 = -6; después -2 por nivel (mínimo configurable) */
+  function segundosPregunta(nivel) {
+    const base = CFG.TIEMPO_PREGUNTA, min = CFG.TIEMPO_MINIMO_PREGUNTA || 4;
+    const s = nivel <= 1 ? base : nivel === 2 ? base - 3 : base - 6 - 2 * (nivel - 3);
+    return Math.max(min, s);
+  }
+
+  function preguntar(resolver, nivel) {
+    const q = Preguntas.siguiente(nivel);
     if (!q) { resolver(false); return; }
-    const total = CFG.TIEMPO_PREGUNTA * 1000;
+    const segundos = segundosPregunta(nivel), total = segundos * 1000;
     let t0 = performance.now(), contestada = false, ultimoTic = 99;
     $('pregunta-texto').textContent = q.texto;
     $('dato').hidden = true;
@@ -156,7 +163,7 @@
       if (i < 0) $('seg').textContent = '¡Tiempo!';
       ok ? Sonido.acierto() : Sonido.fallo();
       const d = $('dato');
-      d.innerHTML = '<b>' + (ok ? '✅ ¡Correcto! Sigues jugando.' : (i < 0 ? '⏱ Se acabó el tiempo.' : '❌ Respuesta incorrecta.') + ' Pierdes una vida.') + '</b>';
+      d.innerHTML = '<b>' + (ok ? '✅ ¡Correcto! Vuelves a la salida, sin perder vida.' : (i < 0 ? '⏱ Se acabó el tiempo.' : '❌ Respuesta incorrecta.') + ' Pierdes una vida y se reinicia el nivel.') + '</b>';
       if (q.dato) d.appendChild(document.createTextNode('💡 ' + q.dato));
       d.hidden = false;
       setTimeout(() => {
@@ -173,7 +180,7 @@
       $('seg').textContent = s;
       if (s <= 5 && s !== ultimoTic) { ultimoTic = s; Sonido.tic(); }
     }, 100);
-    $('seg').textContent = CFG.TIEMPO_PREGUNTA;
+    $('seg').textContent = segundos;
     preguntaAbierta = { responder, compensar: (ms) => { t0 += ms; } };
   }
 
@@ -186,7 +193,7 @@
       const li = document.createElement('li');
       li.innerHTML = '<span class="medalla">' + MEDALLAS[i] + '</span><span class="nombre"></span><span class="pts"></span>';
       li.querySelector('.nombre').textContent = p.nick + (p.correo ? ' ✉️' : '');
-      li.querySelector('.pts').textContent = p.puntos;
+      li.querySelector('.pts').innerHTML = p.puntos + ' <small>(' + (p.aciertos || 0) + ')</small>';
       ol.appendChild(li);
     });
     if (!lista || !lista.length) ol.innerHTML = '<li>Aún no hay puntuaciones</li>';
@@ -196,18 +203,19 @@
     mostrar('pantalla-fin');
     $('fin-nick').textContent = jugador.nick;
     $('fin-puntos').textContent = est.puntos;
+    $('fin-aciertos').textContent = '(' + est.aciertos + ')';
     $('fin-nivel').textContent = est.nivel;
     $('fin-posicion').textContent = 'Calculando tu posición…';
     $('fin-top3').innerHTML = '';
     $('fin-premio').textContent = '';
     Sonido.finJuego();
-    const res = await Almacen.enviar({ nick: jugador.nick, email: jugador.email, puntos: est.puntos, nivel: est.nivel, duracion: est.duracion, consentimiento: jugador.consentimiento });
+    const res = await Almacen.enviar({ nick: jugador.nick, email: jugador.email, puntos: est.puntos, nivel: est.nivel, duracion: est.duracion, aciertos: est.aciertos, consentimiento: jugador.consentimiento });
     const pos = $('fin-posicion');
     if (res.error) pos.textContent = 'No se pudo guardar tu puntuación (' + res.error + ').';
     else if (res.pendiente) pos.textContent = '📡 Sin conexión: tu puntuación se enviará automáticamente cuando vuelva internet.';
     else {
       pos.innerHTML = 'Tu posición: <b>#' + res.posicion + '</b> de ' + res.total + ' jugadores';
-      if (res.mejor > est.puntos) pos.innerHTML += '<br><small>(Tu mejor puntuación es ' + res.mejor + ')</small>';
+      if (res.mejor > est.puntos || (res.mejor === est.puntos && res.mejor_aciertos > est.aciertos)) pos.innerHTML += '<br><small>(Tu mejor puntuación es ' + res.mejor + ' (' + res.mejor_aciertos + '))</small>';
       pintarTop3(res.top3);
     }
     $('fin-premio').textContent = jugador.email

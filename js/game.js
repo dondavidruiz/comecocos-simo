@@ -57,7 +57,7 @@
   let tiempoNivel = 0, tiempoPartida = 0, inicioPartida = 0;
   let modoIdx = 0, modoT = 0, asustadoT = 0, comboFantasmas = 0, ultimoSonidoWaka = 0;
   let pac, fantasmas = [], fruta = null, popups = [], frutasSalidas = 0;
-  let finEnviado = false, invulnerable = 0, ultimoCapturador = -1;
+  let finEnviado = false, invulnerable = 0, ultimoCapturador = -1, aciertos = 0;
 
   /* ------------------------------- utilidades ------------------------------- */
   const rnd = (n) => Math.floor(Math.random() * n);
@@ -106,6 +106,14 @@
     comidos = 0; sinComer = 0; ultimaSalida = 0; frutasSalidas = 0; fruta = null; popups = [];
     modoIdx = 0; modoT = calendarioModos(nivel)[0]; asustadoT = 0; comboFantasmas = 0;
     tiempoNivel = 0; invulnerable = 0; ultimoCapturador = -1;
+    colocarEntidades();
+    if (cb.hud) cb.hud(datosHud());
+    setEstado('listo');
+    if (global.Sonido) { global.Sonido.parar(); if (conIntro) global.Sonido.intro(); }
+  }
+
+  /* Pac-Man en la salida y los fantasmas en su casa (no toca los puntos del tablero) */
+  function colocarEntidades() {
     const antes = pac ? pac.desired : -1;
     pac = { x: 13.5, y: 23, dir: 1, desired: antes, stall: 0, ultimaDir: 1, boca: 0, muerte: 0 };
     fantasmas = FANTASMAS.map((f, i) => ({
@@ -113,9 +121,18 @@
       dir: i === 0 ? 1 : 0, estado: i === 0 ? 'activo' : 'casa',
       asustado: false, invertir: false, fase: 0, bob: i * 1.3
     }));
-    if (cb.hud) cb.hud(datosHud());
+  }
+
+  /* Tras acertar la pregunta: se conserva el tablero tal cual (puntos comidos, marcador, vidas)
+     pero se vuelve a empezar desde la salida, con los fantasmas otra vez en su casa. */
+  function reaparecerEnLaSalida() {
+    colocarEntidades();
+    fruta = null; popups = []; comboFantasmas = 0; asustadoT = 0;
+    modoIdx = 0; modoT = calendarioModos(nivel)[0];
+    sinComer = 0; ultimaSalida = 0; ultimoCapturador = -1;
+    global.Sonido && global.Sonido.parar();
     setEstado('listo');
-    if (global.Sonido) { global.Sonido.parar(); if (conIntro) global.Sonido.intro(); }
+    invulnerable = TIEMPO_INVULNERABLE;     // se descuenta cuando vuelve a jugarse
   }
 
   function setEstado(e) { estado = e; estadoT = 0; }
@@ -368,21 +385,12 @@
     if (global.Sonido) { global.Sonido.parar(); global.Sonido.atrapado(); }
   }
 
-  /* ---- respuesta a la pregunta: ok = acierto => revive donde estaba; si no, pierde una vida ---- */
+  /* ---- respuesta a la pregunta: acierto => reaparece en la salida sin perder vida; fallo => pierde una vida y reinicia el nivel ---- */
   function resolverPregunta(ok) {
     if (estado !== 'pregunta') return;
     if (ok) {
-      invulnerable = TIEMPO_INVULNERABLE;
-      // Los fantasmas que estaban cerca vuelven a su casa para no volver a pillar al jugador de inmediato
-      fantasmas.forEach((g) => {
-        const dx = g.x - pac.x, dy = g.y - pac.y;
-        if (g.estado === 'activo' && dx * dx + dy * dy < 9) {
-          g.estado = 'casa'; g.x = g.def.casa[0]; g.y = g.y0 = 14; g.asustado = false; g.bob = g.i;
-          if (g.i === 0) { g.estado = 'saliendo'; g.x = 13.5; g.y = 14; g.fase = 0; }
-        }
-      });
-      ultimaSalida = 0;
-      setEstado('jugando');
+      aciertos++;
+      reaparecerEnLaSalida();
     } else {
       vidas--;
       if (cb.hud) cb.hud(datosHud());
@@ -403,7 +411,7 @@
     setEstado('fin');
     global.Sonido && global.Sonido.parar();
     const duracion = Math.max(5, Math.round((performance.now() - inicioPartida) / 1000));
-    if (cb.fin) cb.fin({ puntos, nivel, duracion });
+    if (cb.fin) cb.fin({ puntos, nivel, duracion, aciertos });
   }
 
   function pasoJuego(h) {
@@ -458,7 +466,7 @@
       case 'atrapado':
         if (estadoT >= 1.1) {
           setEstado('pregunta');
-          if (cb.pregunta) cb.pregunta(resolverPregunta); else resolverPregunta(false);
+          if (cb.pregunta) cb.pregunta(resolverPregunta, nivel); else resolverPregunta(false);
         }
         break;
       case 'muerte':
@@ -680,7 +688,7 @@
       fantasmas = [];
     },
     nuevaPartida() {
-      nivel = 1; puntos = 0; vidas = VIDAS_INICIALES; vidaExtraDada = false; finEnviado = false;
+      nivel = 1; puntos = 0; vidas = VIDAS_INICIALES; vidaExtraDada = false; finEnviado = false; aciertos = 0;
       tiempoPartida = 0; inicioPartida = performance.now(); ultimo = 0; pausado = false;
       if (pac) pac.desired = -1;
       redimensionar();
@@ -695,7 +703,7 @@
     reanudar() { pausado = false; ultimo = 0; },
     redimensionar,
     get estado() { return estado; },
-    get datos() { return { puntos, nivel, vidas, restantes, estado, comidos }; },
+    get datos() { return { puntos, nivel, vidas, restantes, estado, comidos, aciertos }; },
     _debug: {
       get pac() { return pac; }, get fantasmas() { return fantasmas; },
       set puntos(v) { puntos = v; if (cb.hud) cb.hud(datosHud()); },

@@ -11,7 +11,8 @@ window.SIMO_CONFIG = {
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB0a29zYnd6cG9vZXN2anl3Z216Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4ODMwMzksImV4cCI6MjEwNzQ1OTAzOX0.uembA4y-i5GAi2ouVLYiF-3uzx4cET91Ssiy8DizMfM',
 
   PREGUNTAS_URL: 'preguntas.csv',
-  TIEMPO_PREGUNTA: 20,          // segundos para responder
+  TIEMPO_PREGUNTA: 20,          // segundos para responder en el nivel 1 (nivel 2: -3 s, nivel 3: -6 s, luego -2 s por nivel)
+  TIEMPO_MINIMO_PREGUNTA: 4,    // nunca baja de estos segundos
   RANKING_REFRESCO_S: 10,       // cada cuánto se actualiza ranking.html
   SEGUNDOS_PANTALLA_FINAL: 90   // vuelve sola a la portada si nadie toca (modo kiosco)
 };

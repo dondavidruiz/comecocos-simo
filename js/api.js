@@ -42,21 +42,23 @@
     todas.forEach((p) => {
       const clave = p.email ? p.email.toLowerCase() : 'anon-' + p.id;
       const a = m.get(clave);
-      if (!a || p.puntos > a.puntos || (p.puntos === a.puntos && p.creado < a.creado)) m.set(clave, p);
+      const mejor = !a || p.puntos > a.puntos || (p.puntos === a.puntos && (p.aciertos || 0) > (a.aciertos || 0)) || (p.puntos === a.puntos && (p.aciertos || 0) === (a.aciertos || 0) && p.creado < a.creado);
+      if (mejor) m.set(clave, p);
     });
-    return [...m.values()].sort((a, b) => b.puntos - a.puntos || a.creado - b.creado);
+    return [...m.values()].sort((a, b) => b.puntos - a.puntos || (b.aciertos || 0) - (a.aciertos || 0) || a.creado - b.creado);
   }
   function enviarLocal(d) {
     const todas = leer(CLAVE_LOCAL, []);
     const id = Date.now() + Math.random();
-    todas.push({ id, creado: Date.now(), nick: d.nick, email: d.email || null, puntos: d.puntos, nivel: d.nivel });
+    todas.push({ id, creado: Date.now(), nick: d.nick, email: d.email || null, puntos: d.puntos, nivel: d.nivel, aciertos: d.aciertos || 0 });
     guardar(CLAVE_LOCAL, todas);
     const mej = mejoresLocal();
     const clave = d.email ? d.email.toLowerCase() : 'anon-' + id;
     const yo = mej.find((p) => (p.email ? p.email.toLowerCase() : 'anon-' + p.id) === clave);
     return {
-      posicion: mej.filter((p) => p.puntos > yo.puntos).length + 1, total: mej.length, mejor: yo.puntos,
-      top3: mej.slice(0, 3).map((p) => ({ nick: p.nick, puntos: p.puntos, correo: !!p.email }))
+      posicion: mej.filter((p) => p.puntos > yo.puntos || (p.puntos === yo.puntos && (p.aciertos || 0) > (yo.aciertos || 0))).length + 1,
+      total: mej.length, mejor: yo.puntos, mejor_aciertos: yo.aciertos || 0,
+      top3: mej.slice(0, 3).map((p) => ({ nick: p.nick, puntos: p.puntos, aciertos: p.aciertos || 0, correo: !!p.email }))
     };
   }
 
@@ -74,7 +76,7 @@
     return r.json();
   }
   const aPeticion = (d) => ({
-    p_nick: d.nick, p_email: d.email || null, p_puntos: d.puntos, p_nivel: d.nivel, p_duracion: d.duracion, p_consentimiento: !!d.consentimiento
+    p_nick: d.nick, p_email: d.email || null, p_puntos: d.puntos, p_nivel: d.nivel, p_duracion: d.duracion, p_aciertos: d.aciertos || 0, p_consentimiento: !!d.consentimiento
   });
 
   /* ------------------------------------ API ---------------------------------- */
@@ -96,7 +98,7 @@
       }
     },
     async ranking(n) {
-      if (!remoto) return mejoresLocal().slice(0, n || 10).map((p) => ({ nick: p.nick, puntos: p.puntos, nivel: p.nivel, correo: !!p.email }));
+      if (!remoto) return mejoresLocal().slice(0, n || 10).map((p) => ({ nick: p.nick, puntos: p.puntos, aciertos: p.aciertos || 0, nivel: p.nivel, correo: !!p.email }));
       return rpc('ranking_top', { p_n: n || 10 });
     },
     get pendientes() { return leer(CLAVE_COLA, []).length; },
