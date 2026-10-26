@@ -79,7 +79,7 @@ pregunta;correcta;falsa1;falsa2;disparatada;dato;dificultad
 
 ## 5 · Reglas del juego
 
-- 3 vidas (la que juega + 2 extra); vida extra a los 10.000 puntos. Puntuación del original (punto 10, píldora 50, fantasmas 200-400-800-1600, frutas 100-5000).
+- 2 vidas (la que juega + 1 extra); vida extra a los 10.000 puntos. Puntuación del original (punto 10, píldora 50, fantasmas 200-400-800-1600, frutas 100-5000).
 - **Fantasma te atrapa → pregunta de 4 opciones** (una disparatada).
   - Acierto: **reapareces en la salida** con los puntos del tablero ya comidos, el marcador y las vidas intactos, y 3 s de invulnerabilidad.
   - Fallo o tiempo agotado: pierdes una vida y **reinicias el nivel**. Los puntos se mantienen siempre.
