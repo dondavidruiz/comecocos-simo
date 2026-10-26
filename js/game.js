@@ -14,7 +14,7 @@
   const DX = [0, -1, 0, 1], DY = [-1, 0, 1, 0];
   const BASE = 8.6;            // casillas por segundo al 100 % de velocidad
   const FILA_TUNEL = 14;
-  const VIDAS_INICIALES = 3;   // la que juega + 2 extra
+  const VIDAS_INICIALES = 2;   // la que juega + 1 extra
   const TIEMPO_INVULNERABLE = 3;
   const PUERTA = { x: 13, y: 11 };   // casilla justo encima de la puerta de la casa
 
