@@ -2,8 +2,8 @@
  * - Archivos del juego: "red primero, caché de respaldo" (así siempre ves la última versión
  *   si hay conexión, y si no la hay se usa la copia guardada).
  * - Las llamadas al backend (Supabase) nunca se cachean. */
-const VERSION = 'simo26-v2';
-const ARCHIVOS = ['./', 'index.html', 'ranking.html', 'preguntas.csv', 'manifest.webmanifest', 'css/style.css',
+const VERSION = 'simo26-v3';
+const ARCHIVOS = ['./', 'index.html', 'ranking.html', 'verificar.html', 'preguntas.csv', 'manifest.webmanifest', 'css/style.css',
   'js/config.js', 'js/mazes.js', 'js/audio.js', 'js/preguntas-embebidas.js', 'js/questions.js', 'js/api.js', 'js/game.js', 'js/ui.js',
   'img/logo.png', 'img/icono-192.png', 'img/icono-512.png'];
 

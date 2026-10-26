@@ -12,7 +12,11 @@
       font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif; }
     main { flex:1; width:min(900px,100%); margin:0 auto; padding:18px 14px; }
     h1 { text-align:center; margin:4px 0 2px; color:var(--amarillo); font-size:clamp(26px,6vw,54px); text-transform:uppercase; text-shadow:0 3px 0 #b34a00; }
-    .sub { text-align:center; color:var(--suave); margin:0 0 16px; font-size:clamp(14px,2.6vw,22px); }
+    .sub { text-align:center; color:var(--suave); margin:0 0 12px; font-size:clamp(14px,2.6vw,22px); }
+    .pestanas { display:flex; justify-content:center; gap:10px; margin:0 0 14px; }
+    .pestanas button { appearance:none; border:2px solid var(--borde); background:var(--panel); color:#fff; font:bold clamp(15px,2.6vw,22px) inherit;
+      padding:8px 22px; border-radius:12px; cursor:pointer; }
+    .pestanas button.activa { background:var(--amarillo); color:#1a1200; border-color:var(--amarillo); }
     ol { list-style:none; margin:0; padding:0; }
     li { display:flex; align-items:center; gap:14px; padding:clamp(8px,1.6vw,16px) 16px; margin-bottom:8px; border-radius:14px;
       background:var(--panel); border:2px solid var(--borde); font-size:clamp(18px,3.6vw,34px); }
@@ -22,7 +26,7 @@
     .pts { font:bold 1.05em "Courier New",monospace; color:var(--amarillo); }
     .pts small { color:var(--suave); font-weight:normal; font-size:.7em; }
     .nota { text-align:center; color:var(--suave); font-size:14px; margin-top:12px; }
-    .vacio { text-align:center; color:var(--suave); padding:30px; }
+    .vacio { text-align:center; color:var(--suave); padding:30px; justify-content:center; }
     footer { background:#fff; border-top:3px solid var(--naranja); padding:3px 8px; }
     footer img { display:block; width:100%; max-height:54px; object-fit:contain; }
     a { color:#9fb2ff; }
@@ -31,8 +35,13 @@
 <body>
 <main>
   <h1>🏆 Clasificación</h1>
-  <p class="sub">Formación Educacyl · SIMO 26 &nbsp;·&nbsp; ✉️ = participa en el concurso &nbsp;·&nbsp; (n) = respuestas acertadas, desempatan</p>
+  <p class="sub" id="sub">Formación Educacyl · SIMO 26</p>
+  <div class="pestanas" role="tablist">
+    <button type="button" id="t-hoy" class="activa" role="tab">Hoy · premios</button>
+    <button type="button" id="t-general" role="tab">General</button>
+  </div>
   <ol id="lista"><li class="vacio">Cargando…</li></ol>
+  <p class="nota" id="leyenda">(n) = respuestas acertadas: en caso de empate a puntos, queda por encima quien más tenga.</p>
   <p class="nota" id="nota"></p>
   <p class="nota"><a href="index.html">← Volver al juego</a></p>
 </main>
@@ -41,17 +50,23 @@
 <script src="js/api.js"></script>
 <script>
   const CFG = window.SIMO_CONFIG, medallas = ['🥇', '🥈', '🥉'];
+  let modo = 'hoy';
+  const SUBS = {
+    hoy: 'Premio para los 3 primeros de cada día · solo cuentan las partidas en el horario del stand',
+    general: 'Mejor partida de cada jugador en toda la feria (informativa; los premios son diarios)'
+  };
   async function pintar() {
     const ol = document.getElementById('lista');
+    document.getElementById('sub').textContent = SUBS[modo];
     try {
-      const datos = await Almacen.ranking(10);
+      const datos = await Almacen.ranking(10, modo);
       ol.innerHTML = '';
-      if (!datos.length) { ol.innerHTML = '<li class="vacio">Todavía no hay puntuaciones. ¡Sé el primero!</li>'; }
+      if (!datos.length) ol.innerHTML = '<li class="vacio">Todavía no hay puntuaciones. ¡Sé el primero!</li>';
       datos.forEach((p, i) => {
         const li = document.createElement('li');
         li.innerHTML = '<span class="pos"></span><span class="nombre"></span><span class="pts"></span>';
         li.querySelector('.pos').textContent = medallas[i] || (i + 1);
-        li.querySelector('.nombre').textContent = p.nick + (p.correo ? ' ✉️' : '');
+        li.querySelector('.nombre').textContent = p.nick;
         li.querySelector('.pts').innerHTML = p.puntos + ' <small>(' + (p.aciertos || 0) + ')</small>';
         ol.appendChild(li);
       });
@@ -60,6 +75,14 @@
       document.getElementById('nota').textContent = 'No se pudo actualizar la clasificación (sin conexión).';
     }
   }
+  function elegir(m) {
+    modo = m;
+    document.getElementById('t-hoy').classList.toggle('activa', m === 'hoy');
+    document.getElementById('t-general').classList.toggle('activa', m === 'general');
+    pintar();
+  }
+  document.getElementById('t-hoy').onclick = () => elegir('hoy');
+  document.getElementById('t-general').onclick = () => elegir('general');
   pintar(); setInterval(pintar, CFG.RANKING_REFRESCO_S * 1000);
 </script>
 </body>

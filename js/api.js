@@ -1,14 +1,15 @@
 /* ============================================================================
- *  Almacén de puntuaciones.
- *   · Con SUPABASE_URL configurado: guarda en Supabase llamando a dos funciones SQL
- *     (enviar_puntuacion y ranking_top). El correo nunca vuelve al navegador.
+ *  Almacén de puntuaciones. NO se guardan datos personales: solo nick, puntos,
+ *  nivel, respuestas acertadas y un código de partida.
+ *   · Con SUPABASE_URL configurado: guarda en Supabase llamando a funciones SQL.
  *   · Sin configurar: MODO LOCAL en localStorage (solo para pruebas).
- *   · Si falla la red, la partida se guarda en una cola local y se reintenta sola.
+ *   · Si falla la red, la partida se guarda en una cola local y se reintenta sola
+ *     (en ese caso el código solo se genera cuando el servidor la recibe).
  * ========================================================================== */
 (function (global) {
   'use strict';
   const CFG = global.SIMO_CONFIG;
-  const CLAVE_LOCAL = 'simo26_local_scores', CLAVE_COLA = 'simo26_pendientes';
+  const CLAVE_LOCAL = 'simo26_local_scores_v2', CLAVE_COLA = 'simo26_pendientes_v2';
   const remoto = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY);
 
   const leer = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) || def; } catch (e) { return def; } };
@@ -30,35 +31,32 @@
     if (FUERTES.test(x) || CORTAS.test(x)) return 'Ese nickname no está permitido. Elige otro.';
     return '';
   }
-  function validarEmail(e) {
-    e = (e || '').trim();
-    if (!e) return '';
-    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e) && e.length <= 120 ? '' : 'El correo no parece válido.';
-  }
 
   /* --------------------------------- modo local ------------------------------ */
-  function mejoresLocal() {
-    const todas = leer(CLAVE_LOCAL, []), m = new Map();
-    todas.forEach((p) => {
-      const clave = p.email ? p.email.toLowerCase() : 'anon-' + p.id;
-      const a = m.get(clave);
-      const mejor = !a || p.puntos > a.puntos || (p.puntos === a.puntos && (p.aciertos || 0) > (a.aciertos || 0)) || (p.puntos === a.puntos && (p.aciertos || 0) === (a.aciertos || 0) && p.creado < a.creado);
-      if (mejor) m.set(clave, p);
+  const diaHoy = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid' }).format(new Date());   // AAAA-MM-DD
+  const mejor = (a, b) => b.puntos > a.puntos || (b.puntos === a.puntos && (b.aciertos > a.aciertos || (b.aciertos === a.aciertos && b.creado < a.creado)));
+  function mejoresLocal(dia) {
+    const m = new Map();
+    leer(CLAVE_LOCAL, []).filter((p) => !dia || p.dia === dia).forEach((p) => {
+      const k = (dia ? p.dia + '|' : '') + p.nick.toLowerCase(), a = m.get(k);
+      if (!a || mejor(a, p)) m.set(k, p);
     });
-    return [...m.values()].sort((a, b) => b.puntos - a.puntos || (b.aciertos || 0) - (a.aciertos || 0) || a.creado - b.creado);
+    return [...m.values()].sort((a, b) => (mejor(a, b) ? 1 : -1));
+  }
+  function codigoLocal() {
+    const al = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let c = '';
+    for (let i = 0; i < 6; i++) c += al[Math.floor(Math.random() * al.length)];
+    return c;
   }
   function enviarLocal(d) {
-    const todas = leer(CLAVE_LOCAL, []);
-    const id = Date.now() + Math.random();
-    todas.push({ id, creado: Date.now(), nick: d.nick, email: d.email || null, puntos: d.puntos, nivel: d.nivel, aciertos: d.aciertos || 0 });
-    guardar(CLAVE_LOCAL, todas);
-    const mej = mejoresLocal();
-    const clave = d.email ? d.email.toLowerCase() : 'anon-' + id;
-    const yo = mej.find((p) => (p.email ? p.email.toLowerCase() : 'anon-' + p.id) === clave);
+    const todas = leer(CLAVE_LOCAL, []), dia = diaHoy();
+    const reg = { id: Date.now() + Math.random(), creado: Date.now(), dia, nick: d.nick, puntos: d.puntos, nivel: d.nivel, aciertos: d.aciertos || 0, codigo: codigoLocal() };
+    todas.push(reg); guardar(CLAVE_LOCAL, todas);
+    const mej = mejoresLocal(dia), yo = mej.find((p) => p.nick.toLowerCase() === d.nick.toLowerCase());
     return {
-      posicion: mej.filter((p) => p.puntos > yo.puntos || (p.puntos === yo.puntos && (p.aciertos || 0) > (yo.aciertos || 0))).length + 1,
-      total: mej.length, mejor: yo.puntos, mejor_aciertos: yo.aciertos || 0,
-      top3: mej.slice(0, 3).map((p) => ({ nick: p.nick, puntos: p.puntos, aciertos: p.aciertos || 0, correo: !!p.email }))
+      codigo: reg.codigo, cuenta: true, dia, posicion: mej.indexOf(yo) + 1, total: mej.length,
+      mejor: yo.puntos, mejor_aciertos: yo.aciertos, es_la_mejor: yo.id === reg.id,
+      top3: mej.slice(0, 3).map((p) => ({ nick: p.nick, puntos: p.puntos, aciertos: p.aciertos }))
     };
   }
 
@@ -67,7 +65,7 @@
     const r = await fetch(CFG.SUPABASE_URL.replace(/\/$/, '') + '/rest/v1/rpc/' + nombre, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', apikey: CFG.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + CFG.SUPABASE_ANON_KEY },
-      body: JSON.stringify(cuerpo)
+      body: JSON.stringify(cuerpo || {})
     });
     if (!r.ok) {
       let msg = ''; try { msg = (await r.json()).message || ''; } catch (e) { /* sin cuerpo */ }
@@ -75,36 +73,43 @@
     }
     return r.json();
   }
-  const aPeticion = (d) => ({
-    p_nick: d.nick, p_email: d.email || null, p_puntos: d.puntos, p_nivel: d.nivel, p_duracion: d.duracion, p_aciertos: d.aciertos || 0, p_consentimiento: !!d.consentimiento
-  });
+  const aPeticion = (d) => ({ p_nick: d.nick, p_puntos: d.puntos, p_nivel: d.nivel, p_duracion: d.duracion, p_aciertos: d.aciertos || 0 });
 
   /* ------------------------------------ API ---------------------------------- */
   const Almacen = {
-    remoto, validarNick, validarEmail,
-    /* Devuelve { posicion, total, top3, pendiente? } — nunca rechaza: si no hay red, encola. */
-    async enviar(d) {
-      try {
-        const res = remoto ? await rpc('enviar_puntuacion', aPeticion(d)) : enviarLocal(d);
-        this.reintentarPendientes();
-        return res;
-      } catch (e) {
-        const sinRed = !e.http || e.http >= 500;
-        if (sinRed) {
-          const cola = leer(CLAVE_COLA, []); cola.push(d); guardar(CLAVE_COLA, cola);
-          return { pendiente: true };
+    remoto, validarNick, llamar: rpc,
+    /* Devuelve { codigo, cuenta, posicion, total, top3, ... } — nunca rechaza.
+       Si no hay red hace hasta `intentos` intentos (cada 4 s) y, si no hay forma, deja la partida en cola. */
+    async enviar(d, intentos) {
+      intentos = intentos || 1;
+      for (let i = 1; i <= intentos; i++) {
+        try {
+          const res = remoto ? await rpc('enviar_puntuacion', aPeticion(d)) : enviarLocal(d);
+          this.reintentarPendientes();
+          return res;
+        } catch (e) {
+          if (e.http && e.http < 500) return { error: e.message };      // rechazo del servidor (nick no permitido, etc.)
+          if (i < intentos) await new Promise((r) => setTimeout(r, 4000));   // sin red o servidor caído: reintenta
         }
-        return { error: e.message };      // rechazo del servidor (nick no permitido, etc.)
       }
+      const cola = leer(CLAVE_COLA, []); cola.push(d); guardar(CLAVE_COLA, cola);
+      return { pendiente: true };
     },
-    async ranking(n) {
-      if (!remoto) return mejoresLocal().slice(0, n || 10).map((p) => ({ nick: p.nick, puntos: p.puntos, aciertos: p.aciertos || 0, nivel: p.nivel, correo: !!p.email }));
-      return rpc('ranking_top', { p_n: n || 10 });
+    /* modo: 'hoy' (podio del día) o 'general' */
+    async ranking(n, modo) {
+      modo = modo || 'hoy';
+      if (!remoto) return mejoresLocal(modo === 'hoy' ? diaHoy() : null).slice(0, n || 10);
+      return rpc('ranking_top', { p_n: n || 10, p_modo: modo });
+    },
+    /* { abierto, apertura, cierre, hoy } — si no se puede consultar, se asume abierto */
+    async estado() {
+      if (!remoto) return { abierto: true, hoy: diaHoy(), apertura: '', cierre: '', local: true };
+      try { return await rpc('estado_concurso'); } catch (e) { return null; }
     },
     get pendientes() { return leer(CLAVE_COLA, []).length; },
     async reintentarPendientes() {
       if (!remoto) return;
-      let cola = leer(CLAVE_COLA, []);
+      const cola = leer(CLAVE_COLA, []);
       if (!cola.length) return;
       const resto = [];
       for (const d of cola) {

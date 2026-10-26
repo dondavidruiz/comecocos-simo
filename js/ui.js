@@ -6,7 +6,7 @@
   'use strict';
   const CFG = window.SIMO_CONFIG;
   const $ = (id) => document.getElementById(id);
-  let jugador = { nick: '', email: '', consentimiento: false };
+  let jugador = { nick: '' };
   let temporizadorFin = null, preguntaAbierta = null, ocultaDesde = 0;
 
   /* ------------------------------ pantallas ------------------------------ */
@@ -25,31 +25,40 @@
 
   function volverAPortada() {
     $('form-inicio').reset();
-    actualizarConsentimiento();
     $('error-form').hidden = true;
-    jugador = { nick: '', email: '', consentimiento: false };
+    jugador = { nick: '' };
+    pintarEstado();
     mostrar('pantalla-inicio');
     document.querySelector('#pantalla-inicio .scroll').scrollTop = 0;
   }
 
   /* ------------------------------ portada ------------------------------- */
-  function actualizarConsentimiento() {
-    const hayCorreo = $('email').value.trim().length > 0;
-    $('fila-consent').style.opacity = hayCorreo ? '1' : '.5';
-    if (!hayCorreo) $('consent').checked = false;
-  }
-  $('email').addEventListener('input', actualizarConsentimiento);
-
   function errorForm(msg) { const e = $('error-form'); e.textContent = msg; e.hidden = !msg; }
+
+  /* Banner: ¿está abierto el concurso ahora? (horario definido en la base de datos) */
+  async function pintarEstado() {
+    const el = $('estado-concurso'), est = await Almacen.estado();
+    if (!est || est.local) { el.hidden = true; return; }
+    el.hidden = false;
+    if (!est.hay_concurso) {
+      el.className = 'estado cerrado';
+      el.textContent = '🔴 Hoy no hay concurso: puedes jugar, pero tu partida no puntuará para el premio.';
+    } else if (est.abierto) {
+      el.className = 'estado abierto';
+      el.textContent = '🟢 Concurso abierto hoy hasta las ' + est.cierre + ': tus partidas puntúan para el premio.';
+    } else {
+      el.className = 'estado cerrado';
+      el.textContent = '🔴 Ahora mismo el concurso está cerrado (horario de hoy: ' + est.apertura + ' a ' + est.cierre + '). Puedes jugar, pero tu partida no puntuará para el premio.';
+    }
+  }
 
   $('form-inicio').addEventListener('submit', (ev) => {
     ev.preventDefault();
-    const nick = $('nick').value.trim().replace(/\s+/g, ' '), email = $('email').value.trim();
-    let msg = Almacen.validarNick(nick) || Almacen.validarEmail(email);
-    if (!msg && email && !$('consent').checked) msg = 'Para usar tu correo debes aceptar la información de protección de datos.';
+    const nick = $('nick').value.trim().replace(/\s+/g, ' ');
+    const msg = Almacen.validarNick(nick);
     if (msg) { errorForm(msg); return; }
     errorForm('');
-    jugador = { nick, email, consentimiento: !!email && $('consent').checked };
+    jugador = { nick };
     Sonido.activar(); Sonido.clic();
     if (Preguntas.total === 0) Preguntas.cargar(CFG.PREGUNTAS_URL);
     mostrar('pantalla-juego');
@@ -57,8 +66,6 @@
   });
 
   function abrirModal(id, v) { $(id).hidden = !v; }
-  $('abrir-legal').addEventListener('click', (e) => { e.preventDefault(); abrirModal('modal-legal', true); });
-  $('cerrar-legal').addEventListener('click', () => abrirModal('modal-legal', false));
 
   /* -------------------------------- HUD ---------------------------------- */
   function hud(d) {
@@ -186,17 +193,16 @@
 
   /* ------------------------------- resultados ------------------------------ */
   const MEDALLAS = ['🥇', '🥈', '🥉'];
-  function enmascarar(e) { const [u, d] = e.split('@'); return u[0] + '***@' + d; }
   function pintarTop3(lista) {
     const ol = $('fin-top3'); ol.innerHTML = '';
     (lista || []).slice(0, 3).forEach((p, i) => {
       const li = document.createElement('li');
       li.innerHTML = '<span class="medalla">' + MEDALLAS[i] + '</span><span class="nombre"></span><span class="pts"></span>';
-      li.querySelector('.nombre').textContent = p.nick + (p.correo ? ' ✉️' : '');
+      li.querySelector('.nombre').textContent = p.nick;
       li.querySelector('.pts').innerHTML = p.puntos + ' <small>(' + (p.aciertos || 0) + ')</small>';
       ol.appendChild(li);
     });
-    if (!lista || !lista.length) ol.innerHTML = '<li>Aún no hay puntuaciones</li>';
+    if (!lista || !lista.length) ol.innerHTML = '<li>Aún no hay puntuaciones hoy</li>';
   }
 
   async function fin(est) {
@@ -205,22 +211,31 @@
     $('fin-puntos').textContent = est.puntos;
     $('fin-aciertos').textContent = '(' + est.aciertos + ')';
     $('fin-nivel').textContent = est.nivel;
-    $('fin-posicion').textContent = 'Calculando tu posición…';
+    $('fin-posicion').textContent = 'Guardando tu puntuación…';
+    $('fin-codigo-caja').hidden = true;
     $('fin-top3').innerHTML = '';
     $('fin-premio').textContent = '';
     Sonido.finJuego();
-    const res = await Almacen.enviar({ nick: jugador.nick, email: jugador.email, puntos: est.puntos, nivel: est.nivel, duracion: est.duracion, aciertos: est.aciertos, consentimiento: jugador.consentimiento });
+    // Hasta 6 intentos (cada 4 s) para poder mostrar el código; si no hay red, la partida queda en cola
+    const res = await Almacen.enviar({ nick: jugador.nick, puntos: est.puntos, nivel: est.nivel, duracion: est.duracion, aciertos: est.aciertos }, 6);
     const pos = $('fin-posicion');
-    if (res.error) pos.textContent = 'No se pudo guardar tu puntuación (' + res.error + ').';
-    else if (res.pendiente) pos.textContent = '📡 Sin conexión: tu puntuación se enviará automáticamente cuando vuelva internet.';
-    else {
-      pos.innerHTML = 'Tu posición: <b>#' + res.posicion + '</b> de ' + res.total + ' jugadores';
-      if (res.mejor > est.puntos || (res.mejor === est.puntos && res.mejor_aciertos > est.aciertos)) pos.innerHTML += '<br><small>(Tu mejor puntuación es ' + res.mejor + ' (' + res.mejor_aciertos + '))</small>';
-      pintarTop3(res.top3);
+    if (res.error) { pos.textContent = 'No se pudo guardar tu puntuación (' + res.error + ').'; return; }
+    if (res.pendiente) {
+      pos.textContent = '📡 Sin conexión: no hemos podido generar tu código. Tu puntuación se enviará cuando vuelva internet, pero sin código no podrás reclamar premio. Si estás en el stand, díselo al personal.';
+      return;
     }
-    $('fin-premio').textContent = jugador.email
-      ? '✉️ Estás participando en el concurso. Si al terminar la feria estás entre los tres primeros con correo, escribiremos a ' + enmascarar(jugador.email) + ' para enviarte el premio.'
-      : 'Esta partida no opta al premio porque no dejaste correo. Puedes volver a jugar e introducirlo.';
+    if (res.cuenta) {
+      pos.innerHTML = 'Tu posición de hoy: <b>#' + res.posicion + '</b> de ' + res.total + ' jugadores';
+      if (!res.es_la_mejor) {
+        pos.innerHTML += '<br><small>Tu mejor partida de hoy: ' + res.mejor + ' (' + res.mejor_aciertos + '). Para el premio vale el código de esa partida.</small>';
+      }
+      $('fin-codigo').textContent = res.codigo;
+      $('fin-codigo-caja').hidden = false;
+      $('fin-premio').textContent = '🎟️ Si al cerrar el stand hoy estás entre los tres primeros, enseña este código (o una captura de pantalla) en el stand para recoger tu premio.';
+    } else {
+      pos.textContent = '⏰ Esta partida se jugó fuera del horario del concurso, así que no puntúa para el premio. ¡Gracias por jugar!';
+    }
+    pintarTop3(res.top3);
   }
   $('btn-repetir').addEventListener('click', volverAPortada);
 
@@ -228,6 +243,8 @@
   Juego.init($('lienzo'), { hud, pregunta: preguntar, fin });
   Preguntas.cargar(CFG.PREGUNTAS_URL);
   Almacen.reintentarPendientes();
+  pintarEstado();
+  setInterval(() => { if ($('pantalla-inicio').classList.contains('activa') && !document.hidden) pintarEstado(); }, 60000);
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
     navigator.serviceWorker.register('sw.js').catch(() => { /* sin PWA, no pasa nada */ });
   }

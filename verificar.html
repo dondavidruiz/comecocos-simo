@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Verificar premios · Formación Educacyl - SIMO 26</title>
+  <link rel="icon" href="img/icono-192.png">
+  <style>
+    :root { --fondo:#0b0d1f; --panel:#151a3c; --borde:#2f3a86; --amarillo:#ffe600; --suave:#aab3e6; --ok:#3ddc84; --ko:#ff5a5a; --naranja:#f15a22; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; display:flex; flex-direction:column; background:var(--fondo); color:#fff; font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif; }
+    main { flex:1; width:min(640px,100%); margin:0 auto; padding:16px 14px; }
+    h1 { margin:4px 0 2px; color:var(--amarillo); font-size:clamp(22px,6vw,34px); text-align:center; }
+    .aviso { text-align:center; color:var(--suave); font-size:14px; margin:0 0 14px; }
+    .tarjeta { background:var(--panel); border:2px solid var(--borde); border-radius:16px; padding:14px 16px; margin-bottom:12px; }
+    h2 { margin:0 0 8px; font-size:18px; color:var(--amarillo); }
+    label { display:block; margin:8px 0 4px; font-weight:bold; font-size:15px; }
+    input { width:100%; padding:12px 14px; border-radius:12px; border:2px solid var(--borde); background:#0e1230; color:#fff; font-size:20px; outline:none; }
+    input.codigo { text-transform:uppercase; letter-spacing:6px; text-align:center; font:bold 28px "Courier New",monospace; }
+    input:focus { border-color:var(--amarillo); }
+    button { appearance:none; border:0; border-radius:12px; padding:12px 18px; font:bold 17px inherit; color:#1a1200; background:var(--amarillo); cursor:pointer; margin-top:10px; }
+    button.sec { background:#2a3270; color:#fff; }
+    button.ok { background:var(--ok); }
+    button:disabled { opacity:.5; }
+    .fila { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:12px; background:#1d2350; margin-bottom:6px; font-size:17px; }
+    .fila .n { font-size:22px; } .fila .nombre { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .fila .pts { font:bold 17px "Courier New",monospace; color:var(--amarillo); } .fila small { color:var(--suave); }
+    .etq { font-size:13px; padding:3px 8px; border-radius:8px; }
+    .etq.entregado { background:#12532e; color:#bff3d3; } .etq.pendiente { background:#5a4a10; color:#ffe9a0; }
+    .res { border-radius:14px; padding:14px; margin-top:12px; font-size:18px; line-height:1.4; }
+    .res.ganador { background:#12532e; border:2px solid var(--ok); } .res.no { background:#5b1a1a; border:2px solid var(--ko); }
+    .res.entregado { background:#5a4a10; border:2px solid #ffd24a; }
+    .res b.grande { display:block; font-size:24px; }
+    .error { color:#ffb3b3; margin:8px 0 0; }
+    footer { background:#fff; border-top:3px solid var(--naranja); padding:3px 8px; }
+    footer img { display:block; width:100%; max-height:54px; object-fit:contain; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>🎟️ Verificar premios</h1>
+  <p class="aviso">Página para el personal del stand. No compartas la clave.</p>
+
+  <section class="tarjeta" id="bloque-clave">
+    <h2>Clave del personal</h2>
+    <input id="clave" type="password" autocomplete="off" placeholder="Clave">
+    <button id="btn-entrar" type="button">Entrar</button>
+    <p class="error" id="err-clave" hidden></p>
+  </section>
+
+  <div id="panel" hidden>
+    <section class="tarjeta">
+      <h2>Top 10 de hoy <small id="dia-hoy" style="color:var(--suave);font-weight:normal"></small></h2>
+      <p class="aviso" style="text-align:left;margin:0 0 8px">Premio: puestos 1-3. Los puestos 4-10 son <b>suplentes</b>: solo si algún ganador no viene (máximo 3 premios al día). <span id="entregados-hoy"></span></p>
+      <div id="ganadores"></div>
+      <button id="btn-refrescar" type="button" class="sec">↻ Actualizar</button>
+    </section>
+
+    <section class="tarjeta">
+      <h2>Comprobar un código</h2>
+      <label for="codigo">Código que enseña el jugador</label>
+      <input id="codigo" class="codigo" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC123">
+      <button id="btn-comprobar" type="button">Comprobar</button>
+      <div id="resultado"></div>
+    </section>
+  </div>
+</main>
+<footer><img src="img/logo.png" alt="Junta de Castilla y León · Consejería de Educación"></footer>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const MED = ['🥇', '🥈', '🥉'];
+  let clave = '';
+  try { clave = sessionStorage.getItem('simo26_clave') || ''; } catch (e) { /* nada */ }
+
+  function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  async function cargarGanadores() {
+    try {
+      const r = await Almacen.llamar('ganadores_dia', { p_clave: clave });
+      $('dia-hoy').textContent = '(' + r.dia + ')';
+      $('entregados-hoy').textContent = 'Premios entregados hoy: ' + r.entregados + ' de 3.';
+      const g = $('ganadores'); g.innerHTML = '';
+      if (!r.ganadores.length) g.innerHTML = '<p style="color:var(--suave)">Todavía no hay partidas válidas hoy.</p>';
+      r.ganadores.forEach((p) => {
+        const d = document.createElement('div'); d.className = 'fila';
+        const suplente = p.puesto > 3;
+        d.innerHTML = '<span class="n">' + (MED[p.puesto - 1] || p.puesto) + '</span><span class="nombre">' + esc(p.nick) + '</span><span class="pts">' + p.puntos +
+          ' <small>(' + p.aciertos + ')</small></span><span class="etq ' + (p.entregado ? 'entregado' : 'pendiente') + '">' + (p.entregado ? 'entregado' : (suplente ? 'suplente' : 'pendiente')) + '</span>';
+        g.appendChild(d);
+      });
+      return true;
+    } catch (e) {
+      $('err-clave').hidden = false; $('err-clave').textContent = e.message === 'clave incorrecta' ? 'Clave incorrecta.' : 'No se pudo conectar (' + e.message + ').';
+      return false;
+    }
+  }
+
+  async function entrar() {
+    clave = $('clave').value || clave;
+    $('err-clave').hidden = true;
+    if (!Almacen.remoto) { $('err-clave').hidden = false; $('err-clave').textContent = 'Esta página necesita la base de datos (Supabase) configurada.'; return; }
+    $('btn-entrar').disabled = true;
+    const ok = await cargarGanadores();
+    $('btn-entrar').disabled = false;
+    if (ok) {
+      try { sessionStorage.setItem('simo26_clave', clave); } catch (e) { /* nada */ }
+      $('bloque-clave').hidden = true; $('panel').hidden = false; $('codigo').focus();
+    }
+  }
+
+  async function comprobar(entregar) {
+    const cod = $('codigo').value.trim();
+    const out = $('resultado'); out.innerHTML = '';
+    if (cod.length < 4) return;
+    try {
+      const r = await Almacen.llamar('verificar_codigo', { p_clave: clave, p_codigo: cod, p_entregar: !!entregar });
+      if (!r.encontrado) { out.innerHTML = '<div class="res no"><b class="grande">❌ Código no encontrado</b>Revisa que esté bien escrito.</div>'; return; }
+      const base = esc(r.nick) + ' · ' + r.puntos + ' puntos (' + r.aciertos + ' aciertos) · nivel ' + r.nivel + ' · ' + r.dia;
+      if ((r.es_ganador || r.puesto <= 10) && r.entregado) {
+        out.innerHTML = '<div class="res entregado"><b class="grande">⚠️ Premio YA ENTREGADO</b>' + base + '<br>Puesto del día: ' + r.puesto + '</div>';
+      } else if (r.es_ganador || r.es_suplente) {
+        out.innerHTML = '<div class="res ganador"><b class="grande">' + (r.es_ganador ? '✅ ¡GANADOR! Puesto ' + r.puesto + ' del día' : '🟡 SUPLENTE (puesto ' + r.puesto + ')') + '</b>' + base + (r.es_ganador ? '' : '<br>Solo entrégale el premio si algún ganador de arriba no ha venido.') +
+          '<br><button id="btn-entregar" type="button" class="ok">Marcar premio como entregado</button></div>';
+        $('btn-entregar').onclick = async () => { await comprobar(true); cargarGanadores(); };
+      } else {
+        const motivo = !r.cuenta ? 'Partida fuera del horario del concurso.' :
+          (r.puesto == null ? 'No es la mejor partida de ese jugador ese día.' : (r.puesto <= 10 ? 'Puesto ' + r.puesto + ': ya se han entregado los 3 premios de ese día.' : 'Puesto ' + r.puesto + ' del día: fuera del top 10.'));
+        out.innerHTML = '<div class="res no"><b class="grande">❌ No es ganador</b>' + base + '<br>' + motivo + '</div>';
+      }
+    } catch (e) {
+      out.innerHTML = '<p class="error">' + esc(e.message === 'clave incorrecta' ? 'Clave incorrecta.' : e.message) + '</p>';
+    }
+  }
+
+  $('btn-entrar').onclick = entrar;
+  $('clave').addEventListener('keydown', (e) => { if (e.key === 'Enter') entrar(); });
+  $('btn-refrescar').onclick = cargarGanadores;
+  $('btn-comprobar').onclick = () => comprobar(false);
+  $('codigo').addEventListener('keydown', (e) => { if (e.key === 'Enter') comprobar(false); });
+  if (clave) { $('clave').value = clave; entrar(); }
+</script>
+</body>
+</html>

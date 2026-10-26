@@ -32,7 +32,7 @@
             <li><b>Muévete</b> deslizando el dedo por la pantalla, con la cruceta o con las flechas del teclado, y <b>come todos los puntos</b>.</li>
             <li>Las <b>píldoras grandes</b> asustan a los fantasmas: ¡puedes comértelos!</li>
             <li>Empiezas con <b>3 vidas</b> (la que juega más 2 extra).</li>
-            <li>Si un fantasma te atrapa, aparece una <b>pregunta</b> con 4 respuestas y <b>20 segundos</b>:
+            <li>Si un fantasma te atrapa, aparece una <b>pregunta</b> con 4 respuestas y <b>tiempo limitado</b> (20 s en el primer nivel):
               <span class="ok">✔ aciertas: vuelves a la salida sin perder vida (los puntos ya comidos se mantienen)</span> ·
               <span class="ko">✘ fallas o se acaba el tiempo: pierdes una vida y reinicias el nivel</span>. Tus puntos se mantienen siempre.</li>
             <li>Cada nivel es más rápido, los fantasmas más listos, <b>las preguntas más difíciles y el tiempo para responder, más corto</b>. ¡A partir del nivel 3 cambia el laberinto!</li>
@@ -43,24 +43,18 @@
             <p>Punto <b>10</b> · Píldora <b>50</b> · Fantasmas <b>200, 400, 800, 1600</b> · Fruta <b>100 a 5000</b> · Vida extra a los <b>10.000</b></p>
           </details>
           <div class="concurso">
-            <h3>🏆 Concurso</h3>
-            <p>El <b>correo electrónico es opcional</b>, pero <b>imprescindible para participar en el concurso</b>. Al terminar la feria, si tu puntuación está <b>entre las tres primeras</b>, nos pondremos en contacto contigo a través de ese correo para enviarte el premio.</p>
+            <h3>🏆 Premios</h3>
+            <p><b>Cada día de la feria</b> hay premio para las <b>tres mejores puntuaciones del día</b>. No hace falta registrarse: al terminar tu partida verás un <b>código</b>. Pásate por el stand <b>a última hora</b> y, si estás entre los tres primeros, enseña tu código o una captura de pantalla para recoger tu premio. Solo cuentan las partidas jugadas <b>en el horario del stand</b>.</p>
           </div>
         </article>
+
+        <p id="estado-concurso" class="estado" hidden></p>
 
         <form id="form-inicio" class="tarjeta" autocomplete="off" novalidate>
           <h2>🎮 ¡A jugar!</h2>
           <label for="nick">Nickname <small>(obligatorio)</small></label>
           <input id="nick" name="nick" type="text" maxlength="14" minlength="2" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ej.: Pacmaster">
-          <p class="aviso">🔒 Mejor <b>no pongas tu nombre real</b>: lo verá todo el mundo en la clasificación.</p>
-
-          <label for="email">Correo electrónico <small>(opcional · necesario para el premio)</small></label>
-          <input id="email" name="email" type="email" inputmode="email" maxlength="120" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="tucorreo@ejemplo.es">
-
-          <label class="check" id="fila-consent">
-            <input id="consent" type="checkbox">
-            <span>He leído y acepto la <a href="#" id="abrir-legal">información sobre protección de datos</a> y consiento que usen mi correo para contactar conmigo si gano.</span>
-          </label>
+          <p class="aviso">🔒 Mejor <b>no pongas tu nombre real</b>: lo verá todo el mundo en la clasificación. <b>No recogemos ningún dato personal</b>: solo tu nickname y tu puntuación.</p>
 
           <p id="error-form" class="error" role="alert" hidden></p>
           <button id="btn-start" type="submit" class="boton grande">▶ START</button>
@@ -97,7 +91,12 @@
           <p class="aciertos-final">Respuestas acertadas <b id="fin-aciertos">(0)</b></p>
           <p class="nivel-final">Llegaste al nivel <b id="fin-nivel">1</b></p>
           <p id="fin-posicion" class="posicion">Calculando tu posición…</p>
-          <h3>🥇 Las tres mejores puntuaciones</h3>
+          <div id="fin-codigo-caja" class="codigo-caja" hidden>
+            <span class="et">TU CÓDIGO DE PARTIDA</span>
+            <b id="fin-codigo">------</b>
+            <small>Haz una captura de pantalla o apúntalo: es lo que te pedirán en el stand para recoger el premio.</small>
+          </div>
+          <h3 id="fin-top-titulo">🥇 Podio de hoy</h3>
           <p class="leyenda">(entre paréntesis, las respuestas acertadas: en caso de empate a puntos queda por encima quien más tenga)</p>
           <ol id="fin-top3" class="top3"></ol>
           <p id="fin-premio" class="premio"></p>
@@ -123,22 +122,6 @@
       <div class="tarjeta centrado"><h2>⏸ Pausa</h2><button id="btn-continuar" type="button" class="boton grande">Continuar</button></div>
     </div>
 
-    <!-- ===================== LEGAL ===================== -->
-    <div id="modal-legal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="legal-t">
-      <div class="tarjeta legal">
-        <h2 id="legal-t">Información sobre protección de datos</h2>
-        <p class="provisional">⚠ Texto provisional, pendiente de validación por el delegado de protección de datos.</p>
-        <dl>
-          <dt>Responsable</dt><dd>Consejería de Educación de la Junta de Castilla y León (CRFPTIC).</dd>
-          <dt>Finalidad</dt><dd>Gestionar tu participación en el concurso del stand de Formación Educacyl en SIMO 26 y, si quedas entre los tres primeros con correo, contactar contigo para entregarte el premio. El nickname y la puntuación se mostrarán en la clasificación.</dd>
-          <dt>Legitimación</dt><dd>Tu consentimiento (el correo es voluntario; sin él puedes jugar, pero no optar al premio).</dd>
-          <dt>Conservación</dt><dd>Hasta la entrega del premio. Después se suprimirán los correos y el resto de datos.</dd>
-          <dt>Destinatarios</dt><dd>No se cederán a terceros. El almacenamiento lo realiza un proveedor de alojamiento que actúa como encargado del tratamiento, con servidores en la UE.</dd>
-          <dt>Derechos</dt><dd>Puedes solicitar el acceso, la rectificación o la supresión de tus datos, y retirar tu consentimiento, escribiendo a la dirección que figure en las bases del concurso.</dd>
-        </dl>
-        <button id="cerrar-legal" type="button" class="boton">Cerrar</button>
-      </div>
-    </div>
   </div>
 
   <!-- Logo institucional: visible en TODAS las pantallas -->
