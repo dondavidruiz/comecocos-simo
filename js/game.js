@@ -57,7 +57,7 @@
   let tiempoNivel = 0, tiempoPartida = 0, inicioPartida = 0;
   let modoIdx = 0, modoT = 0, asustadoT = 0, comboFantasmas = 0, ultimoSonidoWaka = 0;
   let pac, fantasmas = [], fruta = null, popups = [], frutasSalidas = 0;
-  let finEnviado = false, invulnerable = 0, ultimoCapturador = -1, aciertos = 0;
+  let finEnviado = false, invulnerable = 0, ultimoCapturador = -1, aciertos = 0, liberarTodos = false;
 
   /* ------------------------------- utilidades ------------------------------- */
   const rnd = (n) => Math.floor(Math.random() * n);
@@ -103,7 +103,7 @@
   /* ----------------------------- inicio de nivel ---------------------------- */
   function prepararNivel(conIntro) {
     cargarLaberinto(laberintoDeNivel(nivel));
-    comidos = 0; sinComer = 0; ultimaSalida = 0; frutasSalidas = 0; fruta = null; popups = [];
+    comidos = 0; sinComer = 0; ultimaSalida = 0; frutasSalidas = 0; fruta = null; popups = []; liberarTodos = false;
     modoIdx = 0; modoT = calendarioModos(nivel)[0]; asustadoT = 0; comboFantasmas = 0;
     tiempoNivel = 0; invulnerable = 0; ultimoCapturador = -1;
     colocarEntidades();
@@ -123,16 +123,23 @@
     }));
   }
 
-  /* Tras acertar la pregunta: se conserva el tablero tal cual (puntos comidos, marcador, vidas)
-     pero se vuelve a empezar desde la salida, con los fantasmas otra vez en su casa. */
-  function reaparecerEnLaSalida() {
-    colocarEntidades();
+  /* Tras acertar la pregunta: Pac-Man sigue EXACTAMENTE donde le atraparon (misma casilla y
+     dirección) con protección temporal, y los cuatro fantasmas vuelven a su casa y salen de nuevo.
+     El tablero (puntos comidos), el marcador y las vidas no cambian. */
+  function reaparecerEnElSitio() {
+    fantasmas = FANTASMAS.map((f, i) => ({
+      i, def: f, x: f.casa[0], y: 14, y0: 14, dir: 0,
+      estado: i === 0 ? 'saliendo' : 'casa',     // Blinky sale enseguida; los demás, como siempre, escalonados
+      asustado: false, invertir: false, fase: 0, bob: i * 1.3
+    }));
+    pac.stall = 0;
     fruta = null; popups = []; comboFantasmas = 0; asustadoT = 0;
     modoIdx = 0; modoT = calendarioModos(nivel)[0];
     sinComer = 0; ultimaSalida = 0; ultimoCapturador = -1;
+    invulnerable = TIEMPO_INVULNERABLE;           // parpadea y se descuenta mientras se juega
+    liberarTodos = true;                          // los cuatro salen uno tras otro, sin esperar a los puntos
     global.Sonido && global.Sonido.parar();
-    setEstado('listo');
-    invulnerable = TIEMPO_INVULNERABLE;     // se descuenta cuando vuelve a jugarse
+    setEstado('jugando');
   }
 
   function setEstado(e) { estado = e; estadoT = 0; }
@@ -309,7 +316,7 @@
       const g = fantasmas[k];
       if (g.estado !== 'casa') continue;
       // el primero de la cola (por orden) es el único que puede salir
-      if (comidos >= lim[k - 1] || sinComer > espera) {
+      if (comidos >= lim[k - 1] || sinComer > espera || liberarTodos) {
         if (ultimaSalida >= 0.9 || (k === 1 && estadoT < 0.1)) {
           g.estado = 'saliendo'; g.fase = 0; ultimaSalida = 0; sinComer = 0;
         }
@@ -385,12 +392,12 @@
     if (global.Sonido) { global.Sonido.parar(); global.Sonido.atrapado(); }
   }
 
-  /* ---- respuesta a la pregunta: acierto => reaparece en la salida sin perder vida; fallo => pierde una vida y reinicia el nivel ---- */
+  /* ---- respuesta a la pregunta: acierto => sigue donde estaba (con protección) sin perder vida; fallo => pierde una vida y reinicia el nivel ---- */
   function resolverPregunta(ok) {
     if (estado !== 'pregunta') return;
     if (ok) {
       aciertos++;
-      reaparecerEnLaSalida();
+      reaparecerEnElSitio();
     } else {
       vidas--;
       if (cb.hud) cb.hud(datosHud());

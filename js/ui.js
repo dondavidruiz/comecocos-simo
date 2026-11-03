@@ -170,7 +170,7 @@
       if (i < 0) $('seg').textContent = '¡Tiempo!';
       ok ? Sonido.acierto() : Sonido.fallo();
       const d = $('dato');
-      d.innerHTML = '<b>' + (ok ? '✅ ¡Correcto! Vuelves a la salida, sin perder vida.' : (i < 0 ? '⏱ Se acabó el tiempo.' : '❌ Respuesta incorrecta.') + ' Pierdes una vida y se reinicia el nivel.') + '</b>';
+      d.innerHTML = '<b>' + (ok ? '✅ ¡Correcto! Sigues donde estabas, sin perder vida.' : (i < 0 ? '⏱ Se acabó el tiempo.' : '❌ Respuesta incorrecta.') + ' Pierdes una vida y se reinicia el nivel.') + '</b>';
       if (q.dato) d.appendChild(document.createTextNode('💡 ' + q.dato));
       d.hidden = false;
       setTimeout(() => {
