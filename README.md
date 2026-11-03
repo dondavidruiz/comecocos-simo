@@ -81,7 +81,7 @@ pregunta;correcta;falsa1;falsa2;disparatada;dato;dificultad
 
 - 2 vidas (la que juega + 1 extra); vida extra a los 10.000 puntos. Puntuación del original (punto 10, píldora 50, fantasmas 200-400-800-1600, frutas 100-5000).
 - **Fantasma te atrapa → pregunta de 4 opciones** (una disparatada).
-  - Acierto: **reapareces en la salida** con los puntos del tablero ya comidos, el marcador y las vidas intactos, y 3 s de invulnerabilidad.
+  - Acierto: **sigues justo donde te atraparon** (puntos comidos, marcador y vidas intactos), con 3 s de protección, y los fantasmas vuelven a su casa y salen de nuevo.
   - Fallo o tiempo agotado: pierdes una vida y **reinicias el nivel**. Los puntos se mantienen siempre.
 - **Tiempo para responder:** 20 s en el nivel 1, 17 s en el 2, 14 s en el 3 y 2 s menos en cada nivel siguiente, con un mínimo de 4 s (`TIEMPO_PREGUNTA` y `TIEMPO_MINIMO_PREGUNTA` en `js/config.js`).
 - **Respuestas acertadas:** aparecen entre paréntesis junto a los puntos y desempatan.
